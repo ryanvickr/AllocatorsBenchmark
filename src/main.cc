@@ -1,10 +1,17 @@
+#include <benchmark/benchmark.h>
+
 #include <iostream>
 #include <vector>
 
-void standardAllocator() {
-    std::vector<int, std::pmr::polymorphic_allocator<int>> test;
+#include "allocators/custom-allocator.h"
+
+template <typename Allocator>
+static void BM_CreateAndAccess(benchmark::State& state) {
+  for (const auto& _ : state) {
+    std::vector<int> test;
+  }
 }
 
-int main () {
-    std::clog << "Hello world\n";
-}
+BENCHMARK(BM_CreateAndAccess<allocators::StandardAllocator>)->Threads(5);
+
+BENCHMARK_MAIN();
