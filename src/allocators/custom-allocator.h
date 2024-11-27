@@ -21,6 +21,20 @@ class StandardAllocator : public CustomAllocator {
   std::pmr::memory_resource* get_resource() override;
 };
 
+template <std::size_t Size>
+class MonotonicAllocator : public CustomAllocator {
+ public:
+  MonotonicAllocator() = default;
+
+  std::pmr::memory_resource* get_resource() override {
+    return &memory_resource_;
+  }
+
+ private:
+  std::pmr::monotonic_buffer_resource memory_resource_{Size};
+  std::pmr::polymorphic_allocator<> alloc{&memory_resource_};
+};
+
 }  // namespace allocators
 
 #endif  // ALLOCATORS_CUSTOM_ALLOCATOR_H
