@@ -19,7 +19,7 @@ I have a simple "worker" function which loads and access elements in a container
 
 I started with a simple `std::list` to make things simple. Results:
 
-| Allocator | # Threads | Runtime |
+| Allocator | # Threads | Runtime(ns) |
 |---|:---:|---|
 |Standard|1|138101808|
 |Monotonic|1|122417153|
