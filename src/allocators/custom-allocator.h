@@ -10,6 +10,7 @@ class CustomAllocator {
  public:
   virtual ~CustomAllocator() = default;
 
+  // Returns the resource for this allocator.
   virtual std::pmr::memory_resource* get_resource() = 0;
 };
 
