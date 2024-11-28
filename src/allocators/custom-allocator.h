@@ -35,7 +35,6 @@ class MonotonicAllocator : public CustomAllocator {
 
  private:
   std::pmr::monotonic_buffer_resource memory_resource_{Size};
-  std::pmr::polymorphic_allocator<> alloc{&memory_resource_};
 };
 
 // This allocator. TODO: Finish
@@ -51,7 +50,6 @@ class PoolMonotonicAllocator : public CustomAllocator {
  private:
   std::pmr::monotonic_buffer_resource upstream_{Size};
   std::pmr::synchronized_pool_resource memory_resource_{&upstream_};
-  std::pmr::polymorphic_allocator<> alloc{&memory_resource_};
 };
 
 }  // namespace allocators
