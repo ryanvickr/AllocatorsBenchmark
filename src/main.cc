@@ -5,33 +5,31 @@
 
 #include "allocators/custom-allocator.h"
 
-// This is great for when we have some sort of small local blob/data.
-static void BM_PmrVector(benchmark::State& state) {
-  allocators::MonotonicAllocator<512> alloc;
+// This is great for when we have some sort of small local blob/data that needs
+// to be sent onwards for processing (e.g. serialization/deserialization).
+template <typename Allocator>
+static void BM_Vector(benchmark::State& state) {
+  static_assert(std::is_base_of<allocators::CustomAllocator, Allocator>(),
+                "Allocator must be derived from allocators::CustomAllocator");
+
+  Allocator alloc;
   for (const auto& _ : state) {
-    std::pmr::vector<int8_t> vec(alloc.get_resource());
-    for (int i = 0; i < 10; i++) {
+    std::pmr::vector<uint8_t> vec(alloc.get_resource());
+    for (int i = 0; i < 100; i++) {
       vec.push_back(i);
     }
-    benchmark::DoNotOptimize(vec);
   }
 }
 
-static void BM_StandardVector(benchmark::State& state) {
-  for (const auto& _ : state) {
-    std::vector<int8_t> vec;
-    for (int i = 0; i < 10; i++) {
-      vec.push_back(i);
-    }
-    benchmark::DoNotOptimize(vec);
-  }
-}
-BENCHMARK(BM_StandardVector)->Threads(1);
-BENCHMARK(BM_PmrVector)->Threads(1);
-BENCHMARK(BM_StandardVector)->Threads(5);
-BENCHMARK(BM_PmrVector)->Threads(5);
-BENCHMARK(BM_StandardVector)->Threads(10);
-BENCHMARK(BM_PmrVector)->Threads(10);
+BENCHMARK(BM_Vector<allocators::StandardAllocator>)->Threads(1);
+BENCHMARK(BM_Vector<allocators::MonotonicAllocator<256>>)->Threads(1);
+BENCHMARK(BM_Vector<allocators::PoolMonotonicAllocator<256>>)->Threads(1);
+BENCHMARK(BM_Vector<allocators::StandardAllocator>)->Threads(5);
+BENCHMARK(BM_Vector<allocators::MonotonicAllocator<256>>)->Threads(5);
+BENCHMARK(BM_Vector<allocators::PoolMonotonicAllocator<256>>)->Threads(5);
+BENCHMARK(BM_Vector<allocators::StandardAllocator>)->Threads(10);
+BENCHMARK(BM_Vector<allocators::MonotonicAllocator<256>>)->Threads(10);
+BENCHMARK(BM_Vector<allocators::PoolMonotonicAllocator<256>>)->Threads(10);
 
 template <typename Allocator>
 static void BM_CreateAndAccess(benchmark::State& state) {
@@ -60,7 +58,6 @@ static void BM_CreateAndAccess(benchmark::State& state) {
 
   for (const auto& _ : state) {
     const auto value = worker();
-    benchmark::DoNotOptimize(value);
   }
 }
 // Single threaded

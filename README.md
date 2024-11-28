@@ -29,3 +29,16 @@ I started with a simple `std::list` to make things simple. Results:
 |Monotonic|10|180203150|
 
 As we can see, the monotonic allocator scales with threads much better than the standard allocator. With 10 threads, we see ~30% performance improvement.
+
+### std::vector
+
+Here I found that for the initial allocation of a small amount of data, things were pretty fast (~300% improvement). However, as the amount of data increased, the performance gain became almost negligble. The result below are show with about 256 bytes of data:
+
+| Allocator | # Threads | Runtime(ns) |
+|---|:---:|---|
+|Standard|1|311|
+|Monotonic|1|91|
+|Standard|5|317|
+|Monotonic|5|99|
+|Standard|10|423|
+|Monotonic|10|135|
