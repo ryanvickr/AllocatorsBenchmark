@@ -6,30 +6,50 @@
 #include "allocators/custom-allocator.h"
 
 // This is great for when we have some sort of small local blob/data that needs
-// to be sent onwards for processing (e.g. serialization/deserialization).
-template <typename Allocator>
-static void BM_Vector(benchmark::State& state) {
-  static_assert(std::is_base_of<allocators::CustomAllocator, Allocator>(),
-                "Allocator must be derived from allocators::CustomAllocator");
-
-  Allocator alloc;
+// to be sent onwards for processing (e.g. serialization/deserialization). We
+// use a heap-allocated buffer here.
+static void BM_VectorHeapAllocated(benchmark::State& state) {
+  std::unique_ptr<char[]> buffer(new char[1024]);  // heap allocated buffer
   for (const auto& _ : state) {
-    std::pmr::vector<uint8_t> vec(alloc.get_resource());
-    for (int i = 0; i < 100; i++) {
+    std::pmr::monotonic_buffer_resource bytes(buffer.get(), sizeof(buffer));
+    std::pmr::vector<uint8_t> vec(&bytes);
+    for (int i = 0; i < 50; i++) {
       vec.push_back(i);
     }
   }
 }
 
-BENCHMARK(BM_Vector<allocators::StandardAllocator>)->Threads(1);
-BENCHMARK(BM_Vector<allocators::MonotonicAllocator<256>>)->Threads(1);
-BENCHMARK(BM_Vector<allocators::PoolMonotonicAllocator<256>>)->Threads(1);
-BENCHMARK(BM_Vector<allocators::StandardAllocator>)->Threads(5);
-BENCHMARK(BM_Vector<allocators::MonotonicAllocator<256>>)->Threads(5);
-BENCHMARK(BM_Vector<allocators::PoolMonotonicAllocator<256>>)->Threads(5);
-BENCHMARK(BM_Vector<allocators::StandardAllocator>)->Threads(10);
-BENCHMARK(BM_Vector<allocators::MonotonicAllocator<256>>)->Threads(10);
-BENCHMARK(BM_Vector<allocators::PoolMonotonicAllocator<256>>)->Threads(10);
+// This is great for when we have some sort of small local blob/data that needs
+// to be sent onwards for processing (e.g. serialization/deserialization). We
+// can use a stack-allocated buffer here.
+static void BM_VectorStackAllocated(benchmark::State& state) {
+  char buffer[1024];  // stack allocated buffer
+  for (const auto& _ : state) {
+    std::pmr::monotonic_buffer_resource bytes(buffer, sizeof(buffer));
+    std::pmr::vector<uint8_t> vec(&bytes);
+    for (int i = 0; i < 50; i++) {
+      vec.push_back(i);
+    }
+  }
+}
+
+static void BM_VectorVanilla(benchmark::State& state) {
+  for (const auto& _ : state) {
+    std::vector<uint8_t> vec;
+    for (int i = 0; i < 50; i++) {
+      vec.push_back(i);
+    }
+  }
+}
+BENCHMARK(BM_VectorVanilla)->Threads(1);
+BENCHMARK(BM_VectorStackAllocated)->Threads(1);
+BENCHMARK(BM_VectorHeapAllocated)->Threads(1);
+BENCHMARK(BM_VectorVanilla)->Threads(5);
+BENCHMARK(BM_VectorStackAllocated)->Threads(5);
+BENCHMARK(BM_VectorHeapAllocated)->Threads(5);
+BENCHMARK(BM_VectorVanilla)->Threads(10);
+BENCHMARK(BM_VectorStackAllocated)->Threads(10);
+BENCHMARK(BM_VectorHeapAllocated)->Threads(10);
 
 template <typename Allocator>
 static void BM_CreateAndAccess(benchmark::State& state) {
