@@ -22,6 +22,8 @@ class StandardAllocator : public CustomAllocator {
   std::pmr::memory_resource* get_resource() override;
 };
 
+// This is a monotonic allocator which accepts a fixed size and allocates a
+// sequential memory buffer.
 template <std::size_t Size>
 class MonotonicAllocator : public CustomAllocator {
  public:
@@ -33,6 +35,22 @@ class MonotonicAllocator : public CustomAllocator {
 
  private:
   std::pmr::monotonic_buffer_resource memory_resource_{Size};
+  std::pmr::polymorphic_allocator<> alloc{&memory_resource_};
+};
+
+// This allocator. TODO: Finish
+template <std::size_t Size>
+class PoolMonotonicAllocator : public CustomAllocator {
+ public:
+  PoolMonotonicAllocator() = default;
+
+  std::pmr::memory_resource* get_resource() override {
+    return &memory_resource_;
+  }
+
+ private:
+  std::pmr::monotonic_buffer_resource upstream_{Size};
+  std::pmr::synchronized_pool_resource memory_resource_{&upstream_};
   std::pmr::polymorphic_allocator<> alloc{&memory_resource_};
 };
 
