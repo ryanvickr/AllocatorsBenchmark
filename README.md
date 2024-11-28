@@ -32,7 +32,7 @@ As we can see, the monotonic allocator scales with threads much better than the 
 
 ### std::vector
 
-Here I found that for the initial allocation of a small amount of data, things were pretty fast (~300% improvement). However, as the amount of data increased, the performance gain became almost negligble. The result below are show with about 256 bytes of data:
+Here I found that for the initial allocation of a small amount of data, things were pretty fast (~300% improvement). However, as the amount of data increased, the performance gain became almost negligble. The result below are shown with about 256 bytes of data:
 
 | Allocator | # Threads | Runtime(ns) |
 |---|:---:|---|
