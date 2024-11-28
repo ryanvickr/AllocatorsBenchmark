@@ -4,7 +4,13 @@
 
 This is just a short little sandbox I created to test out various types of allocators. I used [google/benchmark](https://github.com/google/benchmark) to benchmark things.
 
-## Methodology
+I have a simple "worker" function which loads and access elements in a container. This worker is tested 5 iterations each with 1 worker thread, 5 worker threads, and 10 worker threads.
+
+## Findings
+
+### std::list
+
+#### std::list Methodology
 
 Currently, I am testing with the following 2 allocators:
 
@@ -12,11 +18,7 @@ Currently, I am testing with the following 2 allocators:
 * Monotonic allocator
 * Pool-Monotonic allocator
 
-I have a simple "worker" function which loads and access elements in a container. This worker is tested 5 iterations each with 1 worker thread, 5 worker threads, and 10 worker threads.
-
-## Findings
-
-### std::list
+#### std::list Results
 
 I started with a simple `std::list` to make things simple. Results:
 
@@ -36,16 +38,26 @@ As we can see, the monotonic allocator scales with threads much better than the 
 
 ### std::vector
 
-Here I found that for the initial allocation of a small amount of data, things were pretty fast (~300% improvement). However, as the amount of data increased, the performance gain became almost negligble. The result below are shown with about 256 bytes of data:
+#### std::vector Methodology
+
+Currently, I am testing with the following 2 allocators:
+
+* Standard new and delete allocator
+* Stack-allocated monotonic allocator
+* Heap-allocated monotonic allocator
+
+#### std::vector Results
+
+Here I found that for the initial allocation of a small amount of data, things with the stack-based allocator were pretty fast (~300% improvement). Even the heap-based monotonic allocator showed improvements (20%). However, as the amount of data increased, the performance gain became almost negligble. The result below are shown with ~1000 bytes of data:
 
 | Allocator | # Threads | Runtime(ns) |
 |---|:---:|---|
-|Standard|1|292|
-|Monotonic|1|89|
-|Pool-Monotonic|1|161|
-|Standard|5|321|
-|Monotonic|5|100|
-|Pool-Monotonic|5|177|
-|Standard|10|421|
-|Monotonic|10|137|
-|Pool-Monotonic|10|229|
+|Standard|1|216|
+|Heap-Allocated|1|196|
+|Stack-Allocated|1|59.2|
+|Standard|5|245|
+|Heap-Allocated|5|204|
+|Stack-Allocated|5|62.7|
+|Standard|10|324|
+|Heap-Allocated|10|262|
+|Stack-Allocated|10|78.8|
